@@ -1,0 +1,72 @@
+from functools import cache
+
+class Solution:
+    def uniquePaths(self, m: int, n: int) -> int:
+        """
+        PROBLEM: LeetCode 62 - Unique Paths
+        GOAL: Find the number of unique paths from top-left (0,0) to bottom-right (m-1, n-1).
+        ALLOWED MOVES: Right (c + 1) or Down (r + 1).
+
+        -------------------------------------------------------------------------
+        APPROACH 1: Brute Force Recursion (Forward Direction)
+        - Mechanics: Explores all possible paths by branching Right or Down at each cell.
+        - Time Complexity: O(2^(m + n)) -> Time Limit Exceeded (TLE)
+        - Space Complexity: O(m + n) call stack depth
+        -------------------------------------------------------------------------
+        def dfs(r, c):
+            if r == m - 1 and c == n - 1: return 1  # Base Case: Reached Destination
+            if r >= m or c >= n: return 0           # Base Case: Out of Bounds
+            return dfs(r, c + 1) + dfs(r + 1, c)   # Move Right + Move Down
+
+        return dfs(0, 0)
+
+        -------------------------------------------------------------------------
+        APPROACH 2: Top-Down Dynamic Programming (Recursion + Memoization)
+        - Mechanics: Caches results of paths(r, c) to avoid re-calculating overlapping
+          subproblems. Cuts search tree from exponential to grid size.
+        - Time Complexity: O(m * n)
+        - Space Complexity: O(m * n) memo table/hashmap + O(m + n) call stack
+        -------------------------------------------------------------------------
+        @cache
+        def dfs_memo(r, c):
+            if r == m - 1 and c == n - 1: return 1
+            if r >= m or c >= n: return 0
+            return dfs_memo(r, c + 1) + dfs_memo(r + 1, c)
+
+        return dfs_memo(0, 0)
+
+        -------------------------------------------------------------------------
+        APPROACH 3: Bottom-Up Dynamic Programming (2D Tabulation)
+        - Mechanics: Fills an m x n table iteratively. First row and first col are 1s.
+          dp[r][c] = dp[r-1][c] + dp[r][c-1] (From Top + From Left).
+        - Time Complexity: O(m * n)
+        - Space Complexity: O(m * n) 2D Grid
+        -------------------------------------------------------------------------
+        dp = [[1] * n for _ in range(m)]
+        for r in range(1, m):
+            for c in range(1, n):
+                dp[r][c] = dp[r-1][c] + dp[r][c-1]
+        return dp[m-1][n-1]
+        """
+
+        # =======================================================================
+        # APPROACH 4: Space-Optimized Bottom-Up DP (SELECTED FOR SUBMISSION)
+        # - Mechanics: Since dp[r][c] only depends on the CURRENT row (left cell)
+        #   and PREVIOUS row (above cell), we compress the 2D grid into a single
+        #   1D array of size n.
+        # - Time Complexity:  O(m * n)
+        # - Space Complexity: O(n) auxiliary space
+        # =======================================================================
+        
+        # Initialize a single row of size n representing the top row (all 1s)
+        row = [1] * n
+
+        # Process grid row by row (starting from the 2nd row)
+        for _ in range(m - 1):
+            # Skip col 0 since the left-most edge always has 1 path (moving straight down)
+            for c in range(1, n):
+                # row[c] (left) = old row[c] (value from above) + row[c-1] (value from left)
+                row[c] += row[c - 1]
+
+        # The last position holds the accumulated unique paths to the target
+        return row[-1]
