@@ -1,0 +1,68 @@
+"""
+Problem: Permutations II (LeetCode 47)
+
+High-Level Idea:
+1. Backtracking with Duplicate Pruning: Standard permutation building, but sort input 
+   first to group duplicate values together.
+2. Maintain a `visited` boolean array to track which indices are currently in `sol`.
+3. Pruning Condition: If `nums[i] == nums[i-1]` and `not visited[i-1]`, SKIP element `i`.
+   - Reason: This enforces that duplicate elements are placed in strict index order.
+     If the previous identical number `nums[i-1]` was NOT visited in the current tree 
+     branch, picking `nums[i]` now would create a duplicate permutation branch.
+
+Complexity:
+- Time: O(N * N!) — At most N! unique permutations, taking O(N) to copy each into `res`.
+- Space: O(N) — Memory used by `visited` array, `sol` array, and recursion call stack depth.
+"""
+
+from typing import List
+
+class Solution:
+    def permuteUnique(self, nums: List[int]) -> List[List[int]]:
+        # Sort to bring duplicate values adjacent to each other
+        nums.sort()
+        res, sol = [], []
+        visited = [False] * len(nums)
+
+        def backtrack():
+            # Base Case: Built a complete permutation of length N
+            if len(sol) == len(nums):
+                res.append(sol.copy())
+                return
+            
+            for i in range(len(nums)):
+                # Skip elements already used in the current recursive path
+                if visited[i]:
+                    continue
+                
+                # Duplicate Pruning: Skip duplicate value if previous identical element
+                # was NOT used in this branch (enforces left-to-right duplicate order)
+                """
+                  Key Intuition: Why not visited[i-1]?
+                  Consider nums = [1, 1', 2]:
+  
+                  Both 1 and 1' have value 1.
+  
+                  If we process 1 first, visited[0] is True, so 1' can be appended to form [1, 1', 2].
+  
+                  When backtracking resets and tries starting with 1' at index 1:
+                      - nums[1] == nums[0] is True.
+                      - visited[0] is False (because 1 was backtracked).
+                      - not visited[0] evaluates to True, triggering the continue!
+                """
+                if i > 0 and nums[i] == nums[i - 1] and not visited[i - 1]:
+                    continue
+
+                # Choose
+                visited[i] = True
+                sol.append(nums[i])
+                
+                # Explore
+                backtrack()
+                
+                # Unchoose (Backtrack)
+                visited[i] = False
+                sol.pop()
+
+        backtrack()
+        return res
